@@ -1,0 +1,8 @@
+C:\dev\IMS\src\ErrorHandling.cpp;C:\dev\IMS\bin-int\Debug-x64\IMS\ErrorHandling.obj
+C:\dev\IMS\src\DataAccess\FileSystem.cpp;C:\dev\IMS\bin-int\Debug-x64\IMS\FileSystem.obj
+C:\dev\IMS\src\ErrorHandling\ProductValidation\ProductAttributeValidator.cpp;C:\dev\IMS\bin-int\Debug-x64\IMS\ProductAttributeValidator.obj
+C:\dev\IMS\src\ErrorHandling\Validators.cpp;C:\dev\IMS\bin-int\Debug-x64\IMS\Validators.obj
+C:\dev\IMS\src\Main.cpp;C:\dev\IMS\bin-int\Debug-x64\IMS\Main.obj
+C:\dev\IMS\src\Product.cpp;C:\dev\IMS\bin-int\Debug-x64\IMS\Product.obj
+C:\dev\IMS\src\StringUtils.cpp;C:\dev\IMS\bin-int\Debug-x64\IMS\StringUtils.obj
+C:\dev\IMS\src\UserInput.cpp;C:\dev\IMS\bin-int\Debug-x64\IMS\UserInput.obj
