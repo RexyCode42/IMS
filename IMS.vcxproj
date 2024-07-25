@@ -90,20 +90,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\DataAccess\InMemoryStorage.cpp" />
     <ClCompile Include="src\ErrorHandling.cpp" />
     <ClCompile Include="src\DataAccess\FileSystem.cpp" />
     <ClCompile Include="src\ErrorHandling\ProductValidation\ProductAttributeValidator.cpp" />
-    <ClCompile Include="src\ErrorHandling\Validators.cpp" />
+    <ClCompile Include="src\ErrorHandling\ProductValidation\Validators.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Product.cpp" />
     <ClCompile Include="src\StringUtils.cpp" />
     <ClCompile Include="src\UserInput.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\DataAccess\InMemoryStorage.h" />
     <ClInclude Include="src\ErrorHandling.h" />
     <ClInclude Include="src\DataAccess\FileSystem.h" />
     <ClInclude Include="src\ErrorHandling\ProductValidation\ProductAttributeValidator.h" />
-    <ClInclude Include="src\ErrorHandling\Validators.h" />
+    <ClInclude Include="src\ErrorHandling\ProductValidation\Validators.h" />
     <ClInclude Include="src\Product.h" />
     <ClInclude Include="src\StringUtils.h" />
     <ClInclude Include="src\UserInput.h" />

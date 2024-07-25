@@ -1,18 +1,17 @@
 // #include "ManagementSystem.h"
 #include <iostream>
 #include <functional>
-#include <string>
-#include <string_view>
 #include <vector>
-#include <algorithm>
 #include <unordered_set>
-#include <ranges>
 #include <limits>
 #include <expected>
+#include "Product.h"
 #include "StringUtils.h"
+#include "DataAccess/InMemoryStorage.h"
+#include "ErrorHandling/ProductValidation/ProductAttributeValidator.h"
 
 // IMS = Inventory Management System
-//class IIMSUserInteraction {
+//class IUserInteraction {
 //public:
 //	virtual void showMessage(const std::string& message) const = 0;
 //
@@ -26,107 +25,103 @@
 //	}
 //};
 
-enum class ErrorCode {
-	ERROR_PRODUCT_ALREADY_EXISTS,
-	ERROR_EMPTY_INVENTORY,
-	ERROR_PRODUCT_DOES_NOT_EXIST
-};
-
-//[[nodiscard]] std::string errorToMessage(const ErrorCode& error) {
-//	switch (error) {
-//	case ErrorCode::ERROR_PRODUCT_ALREADY_EXISTS:
-//		return "Error: Product Already Exists";
-//	case ErrorCode::ERROR_EMPTY_INVENTORY:
-//		return "Error: Cannot Remove Products From Empty Inventory";
-//	default:
-//		return "Error: Unknown";
-//	}
-//}
-
-class SearchProductAttributes {
-public:
-	std::expected<Product, ErrorCode> searchName(
-		const std::vector<Product>& products, 
-		const std::string_view name) const {
-		const auto cmpProductName{ [name](const Product& product) { return product.name == name; } };
-		const auto productExists{ std::ranges::find_if(products, cmpProductName) };
-		return (productExists != std::end(products)) ? 
-			std::expected<Product, ErrorCode>(*productExists) :
-			std::unexpected(ErrorCode::ERROR_PRODUCT_DOES_NOT_EXIST);
-	}
-};
-
-struct Product {
-	std::string name;
-	double price;
-};
-
-class IProductStorage {
-public:
-	virtual ~IProductStorage() = default;
-	virtual void add(const Product& product) = 0;
-	virtual void remove() = 0;
-	[[nodiscard]] virtual bool exists(const Product& product) const = 0;
-};
-
-class InMemoryStorage : IProductStorage {
-public:
-	void add(const Product& product) override;
-	
-	void remove() override;
-
-	[[nodiscard]] bool exists(const Product& product) const override;
-
-private:
-	std::vector<Product> products;
-};
-
-void InMemoryStorage::add(const Product& product)
-{
-	if (exists(product)) {
-		std::cerr << "Product Already Exists" << std::endl;
-		return;
-	}
-
-	products.emplace_back(product);
-	std::cout << "Successfully added: " << product.name << std::endl;
+void clearFlagsAndIgnoreInvalidInput() {
+	std::cin.clear();
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
-void InMemoryStorage::remove()
-{
-	// Implement Later...
+std::string promptForNameAndFormatIt() {
+	ProductAttributeValidator productNameValidator{ NameValidator{}  };
+	std::string name{};
+
+	do {
+		std::cout << "Enter product name: ";
+		std::getline(std::cin, name);
+	} while (!productNameValidator.isValid(name));
+
+	FormatString::trimEdgesAndBody(name);
+	FormatString::toUpperAll(name);
+
+	return name;
 }
 
-[[nodiscard]] bool InMemoryStorage::exists(const Product& product) const {
-	const auto cmpProductName{ [&product](const Product& other) { return (other.name == product.name); } };
-	const auto productExists{ std::ranges::find_if(products, cmpProductName) };
+std::string promptForCategoryAndFormatIt() {
+	ProductAttributeValidator productCategoryValidator{ CategoryValidator{} };
+	std::string category{};
 
-	return productExists != std::end(products);
+	do {
+		std::cout << "Enter product category: ";
+		std::getline(std::cin, category);
+	} while (!productCategoryValidator.isValid(category));
+
+	FormatString::trimEdgesAndBody(category);
+	FormatString::toUpperAll(category);
+
+	return category;
 }
 
-void formatProduct(Product& product) {
-	FormatString::trimEdgesAndBody(product.name);
-	FormatString::toUpperAll(product.name);
+double promptForProductPrice() {
+	ProductAttributeValidator productUnitPriceValidator{ UnitPriceValidator{} };
+	double unitPrice{};
+
+	do {
+		std::cout << "Enter product price: ";
+		if (!(std::cin >> unitPrice))
+			clearFlagsAndIgnoreInvalidInput();
+	} while (!productUnitPriceValidator.isValid(unitPrice));
+
+	return unitPrice;
 }
 
-int main() {	
-	InMemoryStorage inMemory{};
-	Product product{ "carrot", 0.85 };
-	formatProduct(product);
-	inMemory.add(product);
-	product.name = "leek";
-	product.price = 0.85;
-	formatProduct(product);
-	inMemory.add(product);
+int promptForProductStock() {
+	ProductAttributeValidator productStockValidator{ StockValidator{} };
+	int stock{};
 
-	product.name = "carrot";
-	product.price = 0.85;
-	formatProduct(product);
-	inMemory.add(product);
-	product.name = "orange";
-	product.price = 0.85;
-	formatProduct(product);
-	inMemory.add(product);
+	do {
+		std::cout << "Enter product stock: ";
+		if (!(std::cin >> stock))
+			clearFlagsAndIgnoreInvalidInput();
+	} while (!productStockValidator.isValid(stock));
+
+	return stock;
+}
+
+std::tuple<std::string, std::string, std::string, double, int>
+getProductAttributes(const std::string& lastProductId) {
+	Inventory::IdGenerator idGenerator{};
+	const std::string id{ idGenerator.generateId(lastProductId) };
+	const std::string name{ promptForNameAndFormatIt() };
+	const std::string category{ promptForCategoryAndFormatIt() };
+	const double unitPrice{ promptForProductPrice() };
+	const int stock{ promptForProductStock() };
+	return { id, name, category, unitPrice, stock };
+}
+
+Inventory::Product createProduct(
+	const std::tuple<std::string, std::string, std::string, double, int>& attributes) {
+	const auto [id, name, category, unitPrice, stock] {attributes};
+	return Inventory::Product{ id, name, category, unitPrice, stock };
+}
+
+void addProduct(Inventory::InMemoryProductStorage& inMemoryProductStorage) {
+	const std::string lastProductId{ (!inMemoryProductStorage.getProducts().empty()) ?
+		inMemoryProductStorage.getProducts().back().getId() : ""
+	};
+	const auto attributes{ getProductAttributes(lastProductId) };
+	const auto product{ createProduct(attributes) };
+	inMemoryProductStorage.add(product);
+}
+
+int main() {
+    Inventory::InMemoryProductStorage inMemoryProductStorage{};
+	addProduct(inMemoryProductStorage);
+	std::cout
+		<< inMemoryProductStorage.getProducts().back().getId() << " "
+		<< inMemoryProductStorage.getProducts().back().getName() << " "
+		<< inMemoryProductStorage.getProducts().back().getCategory() << " "
+		<< inMemoryProductStorage.getProducts().back().getPrice() << " "
+		<< inMemoryProductStorage.getProducts().back().getStock() << " "
+		<< inMemoryProductStorage.getProducts().back().calculateInventoryValue();
 
 	//void AddProduct() {
 	//	auto newProduct{ createProduct() };

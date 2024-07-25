@@ -1,2 +1,25 @@
-# Ignore Visual Studio files
+# Ignore Visual Studio specific files
 .vs/
+*.user
+*.suo
+
+# Ignore build outputs
+Debug/
+Release/
+*.obj
+*.exe
+*.pdb
+*.ilk
+
+# Ignore binary files (if not part of source control)
+*.dll
+*.lib
+
+# Ignore other temporary files
+*.log
+*.tmp
+*.bak
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
